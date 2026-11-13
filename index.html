@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+body { margin: 0; font-size: 14px; }
+img { max-width: 100%; }
+[hidden] { display: none !important; }
+</style>
+<title>페어 프로필 카드</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700&family=Noto+Serif+KR:wght@400;700&family=Gowun+Batang:wght@400;700&family=Gowun+Dodum&family=Nanum+Myeongjo:wght@400;700&family=Nanum+Pen+Script&family=Gaegu:wght@400;700&family=Jua&family=Do+Hyeon&family=Song+Myung&family=Hi+Melody&family=Black+Han+Sans&display=swap">
+<style>
+/* Layout: toolbar on top, then a 3-column card — A panel | big pair photo | B panel (same direction). Stacks on phones. */
+/* Card colors/fonts are user-set; defaults are white background, black text. Editor chrome keeps its own fixed light look. */
+:root {
+  color-scheme: light;
+  --bg: #ffffff; --card: #ffffff; --text: #111111; --line: #111111;
+  --quote0: #d8c6f7; --quote1: #d8c6f7;
+  --f-name: 'Gowun Batang', 'Noto Serif KR', serif;
+  --f-body: 'Noto Sans KR', system-ui, sans-serif;
+  --f-quote: 'Gowun Batang', 'Noto Serif KR', serif;
+  --ui-bg: #ffffff; --ui-fg: #17151c; --ui-muted: #6b6676; --ui-line: #e3e0ea; --ui-soft: #f5f3f9; --ui-accent: #4b3a8c;
+  --f-ui: 'Noto Sans KR', system-ui, sans-serif;
+}
+body { background: var(--bg); color: var(--text); font-family: var(--f-body); }
+.stage {
+  padding-block: 16px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+
+/* ---------- toolbar ---------- */
+.toolbar {
+  max-width: 1280px; margin: 0 auto 16px; display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center; justify-content: space-between;
+  font-family: var(--f-ui); font-size: 13px; color: var(--ui-fg); background: var(--ui-soft); border: 1px solid var(--ui-line); border-radius: 10px; padding: 10px 12px 10px 16px;
+}
+.toolbar p { margin: 0; color: var(--ui-muted); }
+.toolbar p b { color: var(--ui-fg); font-weight: 500; }
+.tb-btn { font: 500 14px var(--f-ui); color: #fff; background: var(--ui-fg); border: 0; border-radius: 8px; padding: 9px 16px; cursor: pointer; }
+.tb-btn:focus-visible { outline: 3px solid var(--ui-accent); outline-offset: 2px; }
+
+/* ---------- card ---------- */
+.card {
+  max-width: 1280px; margin: 0 auto;
+  display: grid; grid-template-columns: 1fr 1.25fr 1fr;
+  background: var(--card); color: var(--text); border: 1.5px solid var(--line);
+}
+.main-photo { border-inline: 1.5px solid var(--line); position: relative; min-height: 560px; }
+.panel { padding: 24px; display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+
+.photo { position: absolute; inset: 0; overflow: hidden; cursor: pointer; display: block; width: 100%; height: 100%; border: 0; padding: 0; background: none; color: inherit; font: inherit; }
+.photo img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.ph {
+  position: absolute; inset: 0; display: grid; place-items: center; text-align: center;
+  font-size: 13px; color: color-mix(in srgb, var(--text) 50%, transparent);
+  background: repeating-linear-gradient(-45deg, transparent 0 10px, color-mix(in srgb, var(--text) 6%, transparent) 10px 11px);
+}
+.ph b { display: block; font-size: 15px; font-weight: 500; color: var(--text); margin-bottom: 4px; }
+.photo:hover .ph { background-color: color-mix(in srgb, var(--text) 4%, transparent); }
+.photo:focus-visible { outline: 2px solid var(--line); outline-offset: -4px; }
+.photo-del {
+  position: absolute; z-index: 2; top: 8px; right: 8px; font: 500 12px var(--f-ui); color: #fff; background: rgba(0,0,0,.6);
+  border: 0; border-radius: 6px; padding: 5px 9px; cursor: pointer; opacity: 0; transition: opacity .15s;
+}
+.main-photo:hover .photo-del, .sub:hover .photo-del, .photo-del:focus-visible { opacity: 1; }
+@media (hover: none) { .photo-del { opacity: 1; } }
+
+/* editable text */
+[data-k] { outline: 1px dashed transparent; outline-offset: 3px; border-radius: 2px; cursor: text; min-width: 2em; }
+[data-k]:hover { outline-color: color-mix(in srgb, var(--text) 35%, transparent); }
+[data-k]:focus { outline: 1.5px solid var(--text); }
+[data-k]:empty::before { content: attr(data-ph); color: color-mix(in srgb, var(--text) 35%, transparent); pointer-events: none; }
+
+.head { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: start; }
+.name { font-family: var(--f-name); font-size: clamp(24px, 2.4vw, 32px); line-height: 1.25; margin: 0; overflow-wrap: anywhere; display: block; }
+.alias { font-family: var(--f-name); font-size: 14px; margin-top: 6px; display: block; overflow-wrap: anywhere; }
+.alias:not(:empty) { opacity: .7; }
+
+/* LP / theme song */
+.lp-wrap { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.lp {
+  width: 78px; height: 78px; border-radius: 50%; position: relative; display: block; overflow: hidden; border: 0; padding: 0; cursor: pointer;
+  background: repeating-radial-gradient(circle, #1b1b1b 0 2px, #2a2a2a 2px 3px);
+  box-shadow: 0 0 0 1.5px var(--line);
+}
+.lp img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.lp.has-thumb::after { content: ""; position: absolute; inset: 0; border-radius: 50%; background: repeating-radial-gradient(circle, transparent 0 3px, rgba(0,0,0,.12) 3px 4px); }
+.lp .hole { position: absolute; left: 50%; top: 50%; width: 12px; height: 12px; margin: -6px 0 0 -6px; border-radius: 50%; background: var(--card); box-shadow: 0 0 0 1.5px rgba(0,0,0,.4); z-index: 2; }
+.lp.empty { opacity: .3; }
+.lp.empty:hover { opacity: .5; }
+.lp-label { font-size: 10px; letter-spacing: .14em; text-transform: uppercase; opacity: .65; }
+.lp-edit { font: 11px var(--f-ui); color: inherit; background: none; border: 0; padding: 0; text-decoration: underline; opacity: .6; cursor: pointer; }
+a.lp:hover { animation: spin 3s linear infinite; }
+.lp:focus-visible, .lp-edit:focus-visible { outline: 2px solid var(--line); outline-offset: 3px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { a.lp:hover { animation: none; } }
+
+.desc { border: 1px solid var(--line); padding: 12px 14px; font-size: 14px; line-height: 1.75; white-space: pre-wrap; overflow-wrap: anywhere; min-height: 4.5em; outline-offset: -1px !important; }
+.quote { font-family: var(--f-quote); font-size: 16px; line-height: 1.8; margin: 0; overflow-wrap: anywhere; }
+.quote [data-k] { padding: 0 2px; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+.quote [data-k]:not(:empty) { background: linear-gradient(transparent 55%, var(--qc) 55%); }
+
+.birth { width: 100%; border-collapse: collapse; font-size: 13px; table-layout: fixed; }
+.birth th, .birth td { border: 1px solid var(--line); padding: 8px 10px; text-align: left; vertical-align: top; }
+.birth th { width: 64px; font-weight: 500; font-size: 12px; white-space: nowrap; }
+.birth .nm { font-weight: 700; font-size: 14px; display: block; overflow-wrap: anywhere; }
+.birth .mn { display: block; margin-top: 3px; overflow-wrap: anywhere; }
+.birth .mn:not(:empty) { opacity: .7; }
+
+.sub { position: relative; border: 1px solid var(--line); aspect-ratio: 16 / 7; max-width: 100%; margin-top: auto; }
+
+@media (max-width: 900px) {
+  .card { grid-template-columns: 1fr; }
+  .main-photo { order: -1; min-height: 0; aspect-ratio: 4 / 5; border-inline: 0; border-bottom: 1.5px solid var(--line); }
+  #panel1 { border-top: 1.5px solid var(--line); }
+  .sub { margin-top: 0; }
+}
+
+/* ---------- settings drawer ---------- */
+.drawer {
+  position: fixed; z-index: 30; top: 0; right: 0; bottom: 0; width: min(400px, 100%);
+  background: var(--ui-bg); color: var(--ui-fg); font-family: var(--f-ui); font-size: 14px;
+  border-left: 1px solid var(--ui-line); box-shadow: -10px 0 30px rgba(0,0,0,.1);
+  display: flex; flex-direction: column;
+  padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); padding-right: env(safe-area-inset-right, 0px);
+}
+.drawer-top { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--ui-line); }
+.drawer-top h2 { margin: 0; font-size: 16px; }
+.x { border: 0; background: var(--ui-soft); color: var(--ui-fg); width: 32px; height: 32px; border-radius: 8px; font-size: 18px; cursor: pointer; }
+.x:focus-visible, .ui-btn:focus-visible { outline: 2px solid var(--ui-accent); outline-offset: 2px; }
+.pane { padding: 18px 20px 28px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; flex: 1; }
+.group-title { font-size: 12px; font-weight: 700; letter-spacing: .06em; margin: 6px 0 -4px; padding-top: 14px; border-top: 1px solid var(--ui-line); }
+.group-title:first-child { border-top: 0; padding-top: 0; margin-top: 0; }
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.field > span { font-size: 12px; color: var(--ui-muted); font-weight: 500; }
+.field input[type=url], .field select {
+  font: 14px var(--f-ui); color: var(--ui-fg); background: var(--ui-bg);
+  border: 1px solid var(--ui-line); border-radius: 8px; padding: 9px 11px; width: 100%; box-sizing: border-box;
+}
+.field input:focus, .field select:focus { outline: 2px solid var(--ui-accent); outline-offset: -1px; border-color: transparent; }
+.hint { font-size: 12px; color: var(--ui-muted); margin: -6px 0 0; line-height: 1.5; }
+.colors { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.color { display: flex; align-items: center; gap: 10px; border: 1px solid var(--ui-line); border-radius: 8px; padding: 6px 10px 6px 6px; cursor: pointer; min-width: 0; }
+.color input { width: 32px; height: 32px; border: 0; padding: 0; background: none; cursor: pointer; flex: none; }
+.color span { font-size: 13px; }
+.color code { display: block; font-size: 11px; color: var(--ui-muted); }
+.ui-btn { font: 500 13px var(--f-ui); border: 1px solid var(--ui-line); background: var(--ui-soft); color: #a2283a; border-radius: 8px; padding: 8px 12px; cursor: pointer; align-self: flex-start; }
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="toolbar">
+    <p><b>글자를 눌러</b> 바로 입력하고, <b>사진 칸을 눌러</b> 사진을 넣으세요.</p>
+    <button class="tb-btn" id="openBtn" aria-expanded="false" aria-controls="drawer">테마곡 · 색 · 폰트 설정</button>
+  </div>
+  <div class="card" id="card">
+    <section class="panel" id="panel0"></section>
+    <div class="main-photo" id="photo-main"></div>
+    <section class="panel" id="panel1"></section>
+  </div>
+</div>
+
+<input type="file" id="fileInput" accept="image/*" hidden>
+
+<aside class="drawer" id="drawer" hidden aria-label="설정">
+  <div class="drawer-top">
+    <h2>설정</h2>
+    <button class="x" id="closeBtn" aria-label="닫기">×</button>
+  </div>
+  <div class="pane" id="pane"></div>
+</aside>
+
+<script>
+const FONTS = [
+  ['Noto Sans KR', '본고딕', 'sans-serif'], ['Noto Serif KR', '본명조', 'serif'],
+  ['Gowun Batang', '고운바탕', 'serif'], ['Gowun Dodum', '고운돋움', 'sans-serif'],
+  ['Nanum Myeongjo', '나눔명조', 'serif'], ['Song Myung', '송명', 'serif'],
+  ['Nanum Pen Script', '나눔손글씨 펜', 'cursive'], ['Gaegu', '개구', 'cursive'],
+  ['Hi Melody', '하이멜로디', 'cursive'], ['Jua', '주아', 'sans-serif'],
+  ['Do Hyeon', '도현', 'sans-serif'], ['Black Han Sans', '검은고딕', 'sans-serif'],
+];
+const emptyChar = () => ({ name: '', alias: '', desc: '', quote: '', yt: '', flower: '', flowerMean: '', stone: '', stoneMean: '', star: '', starMean: '', sub: '' });
+const DEFAULT = {
+  main: '', chars: [emptyChar(), emptyChar()],
+  colors: { bg: '#ffffff', card: '#ffffff', text: '#111111', line: '#111111', quote0: '#d8c6f7', quote1: '#d8c6f7' },
+  fonts: { name: 'Gowun Batang', body: 'Noto Sans KR', quote: 'Gowun Batang' },
+};
+const KEY = 'pair-profile-v2';
+const clone = o => JSON.parse(JSON.stringify(o));
+function load() {
+  try {
+    const s = JSON.parse(localStorage.getItem(KEY));
+    if (s && Array.isArray(s.chars)) {
+      const d = clone(DEFAULT);
+      return { main: s.main || '', chars: [0, 1].map(i => Object.assign(emptyChar(), s.chars[i])),
+        colors: Object.assign(d.colors, s.colors), fonts: Object.assign(d.fonts, s.fonts) };
+    }
+  } catch (e) {}
+  return clone(DEFAULT);
+}
+let state = load();
+let saveTimer;
+function save() {
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(() => { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }, 300);
+}
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+function ytId(url) {
+  url = String(url || '').trim();
+  if (!url) return '';
+  if (/^[\w-]{11}$/.test(url)) return url;
+  try {
+    const u = new URL(/^https?:/.test(url) ? url : 'https://' + url);
+    if (u.hostname.includes('youtu.be')) return u.pathname.slice(1, 12);
+    const v = u.searchParams.get('v'); if (v) return v.slice(0, 11);
+    const m = u.pathname.match(/\/(shorts|embed|live|v)\/([\w-]{11})/); if (m) return m[2];
+  } catch (e) {}
+  return '';
+}
+const fontStack = f => { const d = FONTS.find(x => x[0] === f); return `'${f}', ${d ? d[2] : 'sans-serif'}`; };
+
+/* ---------- card structure (built once so typing keeps the cursor) ---------- */
+const ed = (tag, i, k, ph, cls = '') => `<${tag} class="${cls}" data-i="${i}" data-k="${k}" data-ph="${ph}"></${tag}>`;
+function panelHTML(i) {
+  return `
+    <div class="head">
+      <div>${ed('h2', i, 'name', '이름', 'name')}${ed('div', i, 'alias', '이명', 'alias')}</div>
+      <div class="lp-wrap" id="lp${i}"></div>
+    </div>
+    ${ed('div', i, 'desc', '설명을 입력하세요', 'desc')}
+    <p class="quote" style="--qc: var(--quote${i})">${ed('span', i, 'quote', '대사')}</p>
+    <table class="birth">
+      <tr><th>탄생화</th><td>${ed('span', i, 'flower', '꽃 이름', 'nm')}${ed('span', i, 'flowerMean', '꽃말', 'mn')}</td></tr>
+      <tr><th>탄생석</th><td>${ed('span', i, 'stone', '보석 이름', 'nm')}${ed('span', i, 'stoneMean', '의미', 'mn')}</td></tr>
+      <tr><th>탄생별</th><td>${ed('span', i, 'star', '별 이름', 'nm')}${ed('span', i, 'starMean', '의미', 'mn')}</td></tr>
+    </table>
+    <div class="sub" id="photo-sub${i}"></div>`;
+}
+document.getElementById('panel0').innerHTML = panelHTML(0);
+document.getElementById('panel1').innerHTML = panelHTML(1);
+
+let plainOK = true;
+document.querySelectorAll('[data-k]').forEach(el => {
+  el.contentEditable = 'plaintext-only';
+  if (el.contentEditable !== 'plaintext-only') { el.contentEditable = 'true'; plainOK = false; }
+  el.spellcheck = false;
+  el.setAttribute('role', 'textbox');
+  el.setAttribute('aria-label', el.dataset.ph);
+  if (el.dataset.k === 'desc') el.setAttribute('aria-multiline', 'true');
+});
+function fillText() {
+  document.querySelectorAll('[data-k]').forEach(el => { el.textContent = state.chars[+el.dataset.i][el.dataset.k] || ''; });
+}
+const card = document.getElementById('card');
+card.addEventListener('input', e => {
+  const el = e.target.closest('[data-k]'); if (!el) return;
+  let v = el.innerText.replace(/\n$/, '');
+  if (!v.trim()) { el.innerHTML = ''; v = ''; }
+  state.chars[+el.dataset.i][el.dataset.k] = v;
+  save();
+});
+card.addEventListener('keydown', e => {
+  const el = e.target.closest('[data-k]'); if (!el) return;
+  if (e.key === 'Enter' && el.dataset.k !== 'desc') { e.preventDefault(); el.blur(); }
+});
+card.addEventListener('paste', e => {
+  const el = e.target.closest('[data-k]'); if (!el || plainOK) return;
+  e.preventDefault();
+  document.execCommand('insertText', false, (e.clipboardData || window.clipboardData).getData('text/plain'));
+});
+
+/* ---------- photos & LP ---------- */
+function photoHTML(key, src, label) {
+  return `<button type="button" class="photo" data-photo="${key}" aria-label="${label} ${src ? '바꾸기' : '넣기'}">${
+    src ? `<img src="${src}" alt="${label}">` : `<span class="ph"><span><b>${label}</b>눌러서 사진 넣기</span></span>`}</button>${
+    src ? `<button type="button" class="photo-del" data-del="${key}">지우기</button>` : ''}`;
+}
+function renderPhotos() {
+  document.getElementById('photo-main').innerHTML = photoHTML('main', state.main, '메인 사진');
+  [0, 1].forEach(i => document.getElementById('photo-sub' + i).innerHTML = photoHTML('sub' + i, state.chars[i].sub, '서브 사진'));
+}
+function renderLP() {
+  [0, 1].forEach(i => {
+    const id = ytId(state.chars[i].yt);
+    document.getElementById('lp' + i).innerHTML = id
+      ? `<a class="lp has-thumb" href="https://www.youtube.com/watch?v=${id}" target="_blank" rel="noopener" title="테마곡 듣기 (유튜브)">
+           <img src="https://img.youtube.com/vi/${id}/hqdefault.jpg" alt="" onerror="this.parentNode.classList.remove('has-thumb');this.remove()"><span class="hole"></span></a>
+         <span class="lp-label">Theme</span><button type="button" class="lp-edit" data-yt="${i}">링크 수정</button>`
+      : `<button type="button" class="lp empty" data-yt="${i}" aria-label="테마곡 링크 넣기" title="테마곡 링크 넣기"><span class="hole"></span></button>
+         <span class="lp-label">Theme</span>`;
+  });
+}
+function applyStyle() {
+  const r = document.documentElement.style;
+  for (const [k, v] of Object.entries(state.colors)) r.setProperty('--' + k, v);
+  r.setProperty('--f-name', fontStack(state.fonts.name));
+  r.setProperty('--f-body', fontStack(state.fonts.body));
+  r.setProperty('--f-quote', fontStack(state.fonts.quote));
+}
+
+const fileInput = document.getElementById('fileInput');
+let photoTarget = null;
+card.addEventListener('click', e => {
+  const del = e.target.closest('[data-del]');
+  if (del) { setPhoto(del.dataset.del, ''); return; }
+  const p = e.target.closest('[data-photo]');
+  if (p) { photoTarget = p.dataset.photo; fileInput.value = ''; fileInput.click(); return; }
+  const y = e.target.closest('[data-yt]');
+  if (y) { openDrawer(true); const inp = document.getElementById('yt-' + y.dataset.yt); if (inp) inp.focus(); }
+});
+fileInput.addEventListener('change', () => {
+  const f = fileInput.files[0]; if (!f || !photoTarget) return;
+  const key = photoTarget;
+  const reader = new FileReader();
+  reader.onload = () => {
+    const img = new Image();
+    img.onload = () => {
+      const max = key === 'main' ? 1800 : 1200;
+      const s = Math.min(1, max / Math.max(img.width, img.height));
+      const cv = document.createElement('canvas');
+      cv.width = Math.round(img.width * s); cv.height = Math.round(img.height * s);
+      cv.getContext('2d').drawImage(img, 0, 0, cv.width, cv.height);
+      setPhoto(key, cv.toDataURL('image/jpeg', 0.86));
+    };
+    img.src = reader.result;
+  };
+  reader.readAsDataURL(f);
+});
+function setPhoto(key, data) {
+  if (key === 'main') state.main = data; else state.chars[+key.slice(3)].sub = data;
+  renderPhotos(); save();
+}
+
+/* ---------- settings drawer ---------- */
+const drawer = document.getElementById('drawer');
+const openBtn = document.getElementById('openBtn');
+const pane = document.getElementById('pane');
+function openDrawer(open) {
+  drawer.hidden = !open; openBtn.setAttribute('aria-expanded', open);
+  if (open) buildPane();
+}
+openBtn.onclick = () => openDrawer(drawer.hidden);
+document.getElementById('closeBtn').onclick = () => { openDrawer(false); openBtn.focus(); };
+document.addEventListener('keydown', e => { if (e.key === 'Escape' && !drawer.hidden) { openDrawer(false); openBtn.focus(); } });
+
+function buildPane() {
+  const C = [['bg', '페이지 배경'], ['card', '카드 배경'], ['text', '글자'], ['line', '선'], ['quote0', '왼쪽 대사 강조'], ['quote1', '오른쪽 대사 강조']];
+  const fontSel = (key, label) => `<label class="field"><span>${label}</span><select id="font-${key}">${
+    FONTS.map(f => `<option value="${f[0]}" style="font-family:'${f[0]}'" ${state.fonts[key] === f[0] ? 'selected' : ''}>${f[1]}</option>`).join('')}</select></label>`;
+  pane.innerHTML = `
+    <div class="group-title">테마곡 (유튜브 링크)</div>
+    <label class="field"><span>왼쪽 캐릭터</span><input type="url" id="yt-0" value="${esc(state.chars[0].yt)}" placeholder="https://youtu.be/..."></label>
+    <label class="field"><span>오른쪽 캐릭터</span><input type="url" id="yt-1" value="${esc(state.chars[1].yt)}" placeholder="https://youtu.be/..."></label>
+    <p class="hint">링크를 넣으면 영상 썸네일이 LP 위에 표시되고, 누르면 유튜브로 이동해요.</p>
+    <div class="group-title">색</div>
+    <div class="colors">${C.map(([k, l]) => `
+      <label class="color"><input type="color" id="col-${k}" value="${state.colors[k]}"><span>${l}<code>${state.colors[k]}</code></span></label>`).join('')}
+    </div>
+    <div class="group-title">폰트</div>
+    ${fontSel('name', '이름 · 이명')}
+    ${fontSel('body', '본문 (설명 · 표)')}
+    ${fontSel('quote', '대사')}
+    <div class="group-title">초기화</div>
+    <button class="ui-btn" id="resetBtn">전부 비우기</button>
+    <p class="hint">글, 사진, 테마곡, 색, 폰트가 모두 처음 상태로 돌아가요.</p>`;
+  let armed = false, t;
+  document.getElementById('resetBtn').onclick = e => {
+    if (!armed) { armed = true; e.target.textContent = '한 번 더 누르면 전부 지워져요'; t = setTimeout(() => { armed = false; e.target.textContent = '전부 비우기'; }, 3000); return; }
+    clearTimeout(t); state = clone(DEFAULT); renderAll(); save(); buildPane();
+  };
+}
+pane.addEventListener('input', e => {
+  const id = e.target.id; let m;
+  if ((m = id.match(/^yt-(\d)$/))) { state.chars[+m[1]].yt = e.target.value; renderLP(); }
+  else if ((m = id.match(/^col-(\w+)$/))) { state.colors[m[1]] = e.target.value; e.target.nextElementSibling.querySelector('code').textContent = e.target.value; applyStyle(); }
+  else if ((m = id.match(/^font-(\w+)$/))) { state.fonts[m[1]] = e.target.value; applyStyle(); }
+  else return;
+  save();
+});
+pane.addEventListener('change', e => {
+  const m = e.target.id.match(/^font-(\w+)$/);
+  if (m) { state.fonts[m[1]] = e.target.value; applyStyle(); save(); }
+});
+
+function renderAll() { applyStyle(); fillText(); renderPhotos(); renderLP(); }
+renderAll();
+</script>
+</body>
+</html>
